@@ -4,7 +4,6 @@
     Author: Antigravity (Updated: 2026-02-08)
     Status: ONLINE
 ]]
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -13,7 +12,12 @@ local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Mouse = LocalPlayer:GetMouse()
-
+-- // UI Container
+local UI = Instance.new("ScreenGui")
+UI.Name = "AWAKEN_UI"
+UI.ResetOnSpawn = false
+UI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+UI.Parent = game:GetService("CoreGui")
 -- // Clean up existing connections if re-executed
 if getgenv().SakuraConnections then
     for _, v in pairs(getgenv().SakuraConnections) do
@@ -21,7 +25,6 @@ if getgenv().SakuraConnections then
     end
 end
 getgenv().SakuraConnections = {}
-
 -- // Settings (Global)
 -- // Settings (Global)
 getgenv().SakuraSettings = {
@@ -183,18 +186,15 @@ getgenv().SakuraSettings = {
     }
 }
 local Settings = getgenv().SakuraSettings
-
 -- // Helper Functions for Checks
 local function IsAlive(Plr)
     return Plr and Plr.Character and Plr.Character:FindFirstChild("Humanoid") and Plr.Character.Humanoid.Health > 0 and Plr.Character:FindFirstChild("HumanoidRootPart")
 end
-
 local function IsEnemy(Plr)
     if not Settings.Visuals.ESP.TeamColor and not Settings.Combat.TeamCheck then return true end
     if Plr.Team and LocalPlayer.Team and Plr.Team == LocalPlayer.Team then return false end
     return true
 end
-
 local function IsVisible(Plr)
     if not Settings.Combat.WallCheck then return true end
     if not IsAlive(Plr) or not IsAlive(LocalPlayer) then return false end
@@ -217,7 +217,6 @@ local function IsVisible(Plr)
     end
     return true 
 end
-
 local function ParseID(Input)
     if not Input then return "" end
     Input = tostring(Input)
@@ -232,14 +231,12 @@ local function ParseID(Input)
         return "rbxthumb://type=Asset&id=" .. Input .. "&w=420&h=420"
     end
 end
-
 -- Safe Save/Load
 local function SaveConfig()
     if not writefile then return end
     local json = HttpService:JSONEncode(Settings)
     writefile("SakuraConfig.json", json)
 end
-
 local function LoadConfig()
     if not readfile or not isfile or not isfile("SakuraConfig.json") then return end
     local success, decoded = pcall(function() return HttpService:JSONDecode(readfile("SakuraConfig.json")) end)
@@ -256,14 +253,12 @@ local function LoadConfig()
         -- Limitation: Enums don't serialize well. We will use the KeyName to restore binds if possible.
     end
 end
-
 -- // UI Library (Miniaturized for single file)
 local Library = {}
 local UI = Instance.new("ScreenGui")
 UI.Name = "SakuraUI"
 UI.ResetOnSpawn = false
 UI.IgnoreGuiInset = true -- [FIX] Important for Cursor/ESP alignment
-
 -- Safe Parenting
 local function ParentUI()
     local Success, Err = pcall(function()
@@ -283,7 +278,6 @@ local function ParentUI()
     end
 end
 ParentUI()
-
 -- [THEME SYSTEM]
 Library.Themes = {
     Kawaii = {
@@ -323,9 +317,7 @@ Library.Themes = {
         ParticleTexture = "rbxassetid://6687295781"
     }
 }
-
 Library.CurrentThemeName = "Kawaii" -- Default theme
-
 -- [VISUAL EFFECTS SYSTEM]
 local function AddParticles(Parent)
     -- Creates a subtle particle emitter using ImageLabels
@@ -354,7 +346,6 @@ local function AddParticles(Parent)
         end
     end)
 end
-
 local function AddRipple(Btn)
     Btn.ClipsDescendants = true
     Btn.MouseButton1Click:Connect(function()
@@ -379,7 +370,6 @@ local function AddRipple(Btn)
         game.Debris:AddItem(Circle, 0.5)
     end)
 end
-
 -- [CORE LIBRARY IMPLEMENTATION]
 function Library:CreateWindow(Name)
     local Window = {}
@@ -530,7 +520,6 @@ function Library:CreateWindow(Name)
         end
         
         local Elements = {}
-
         function Items:Toggle(Text, Callback)
              local TogFrame = Instance.new("Frame")
              TogFrame.Size = UDim2.new(1, -5, 0, 36)
@@ -582,7 +571,6 @@ function Library:CreateWindow(Name)
                  end
              end)
         end
-
         function Items:Slider(Text, Min, Max, Start, Callback)
              local SFrame = Instance.new("Frame")
              SFrame.Size = UDim2.new(1, -5, 0, 45)
@@ -643,21 +631,18 @@ function Library:CreateWindow(Name)
                  end
              end)
         end
-
         function Items:TextBox(Text, Default, Callback)
             local BoxFrame = Instance.new("Frame")
             local BCorner = Instance.new("UICorner")
             local Label = Instance.new("TextLabel")
             local TextBox = Instance.new("TextBox")
             local TBCorner = Instance.new("UICorner")
-
             BoxFrame.Name = Text
             BoxFrame.Parent = TabContent
             BoxFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
             BoxFrame.Size = UDim2.new(1, -10, 0, 40)
             BCorner.CornerRadius = UDim.new(0, 6)
             BCorner.Parent = BoxFrame
-
             Label.Parent = BoxFrame
             Label.BackgroundTransparency = 1
             Label.Position = UDim2.new(0, 10, 0, 0)
@@ -667,7 +652,6 @@ function Library:CreateWindow(Name)
             Label.TextColor3 = Theme.Text
             Label.TextSize = 14
             Label.TextXAlignment = Enum.TextXAlignment.Left
-
         function Items:TextBox(Text, Default, Callback)
              local BoxFrame = Instance.new("Frame")
              BoxFrame.Size = UDim2.new(1, -5, 0, 45)
@@ -700,7 +684,6 @@ function Library:CreateWindow(Name)
                  Callback(Box.Text)
              end)
         end
-
         function Items:Keybind(Text, DefaultKey, DefaultName, Callback)
              local KFrame = Instance.new("Frame")
              KFrame.Size = UDim2.new(1, -5, 0, 36)
@@ -756,10 +739,8 @@ function Library:CreateWindow(Name)
     end
     return Window
 end
-
 -- [MENU INITIALIZATION]
 local Window = Library:CreateWindow("AWAKEN.EXE")
-
 -- [TAB: COMBAT] 
 local CombatTab = Window:Tab("🎯 Combat")
 CombatTab:Toggle("Aimbot", function(v) 
@@ -819,7 +800,6 @@ CombatTab:Slider("Sticky Duration", 1, 10, 2, function(v)
     Settings.Combat.Aimbot.StickyDuration = v
     print("[Combat] Sticky Duration:", v, "s")
 end)
-
 -- [TAB: VISUALS]
 local VisualsTab = Window:Tab("👁️ Visuals")
 VisualsTab:Toggle("ESP Enabled", function(v) 
@@ -854,7 +834,6 @@ VisualsTab:Slider("Cursor Size", 32, 128, 64, function(v)
     Settings.Cursor.Size = v
     print("[Visuals] Cursor Size:", v)
 end)
-
 -- [TAB: MOVEMENT]
 local MovementTab = Window:Tab("🏃 Movement")
 MovementTab:Slider("Speed", 16, 200, 16, function(v)
@@ -869,7 +848,6 @@ MovementTab:Toggle("Auto Bhop", function(v)
     Settings.Movement.Bhop = v 
     print("[Movement] Auto Bhop:", v)
 end)
-
 -- [TAB: RAGE]
 local RageTab = Window:Tab("😈 Rage")
 RageTab:Toggle("SpinBot", function(v) 
@@ -896,7 +874,6 @@ RageTab:Toggle("Noclip", function(v)
     Settings.Rage.Noclip = v 
     print("[Rage] Noclip:", v)
 end)
-
 -- [TAB: MISC]
 local MiscTab = Window:Tab("🔧 Misc")
 MiscTab:Toggle("Fullbright", function(v) 
@@ -927,7 +904,6 @@ MiscTab:Toggle("Coordinates", function(v)
     Settings.Misc.CoordinateDisplay = v 
     print("[Misc] Coordinates:", v)
 end)
-
 -- [TAB: FOCUS SYSTEM]
 local FocusTab = Window:Tab("🎯 Focus")
 FocusTab:Toggle("Zen Focus", function(v) 
@@ -950,7 +926,6 @@ FocusTab:Toggle("Calm Before Shot", function(v)
     Settings.FocusSystem.CalmBeforeShot = v 
     print("[Focus] Calm Before Shot:", v)
 end)
-
 -- [TAB: AWARENESS]
 local AwarenessTab = Window:Tab("👁️ Awareness")
 AwarenessTab:Toggle("Sixth Sense Pulse", function(v) 
@@ -973,7 +948,6 @@ AwarenessTab:Toggle("Direction Mark", function(v)
     Settings.Awareness.DirectionMark = v 
     print("[Awareness] Direction Mark:", v)
 end)
-
 -- [TAB: WEAPON SOUL]
 local WeaponTab = Window:Tab("⚔️ Weapon")
 WeaponTab:Toggle("Spirit Recoil FX", function(v) 
@@ -1004,7 +978,6 @@ WeaponTab:TextBox("Sound ID", "4590657391", function(v)
     Settings.Misc.SoundID = "rbxassetid://" .. v
     print("[Weapon] Sound ID set to:", v)
 end)
-
 -- [TAB: AWAKENING]
 local AwakeningTab = Window:Tab("⚡ Awakening") 
 AwakeningTab:Toggle("Limit Break Visual", function(v) 
@@ -1027,7 +1000,6 @@ AwakeningTab:Toggle("Overdrive FX", function(v)
     Settings.Awakening.Overdrive = v 
     print("[Awakening] Overdrive:", v)
 end)
-
 -- [TAB: ILLUSIONS]
 local IllusionsTab = Window:Tab("🌀 Illusions")
 IllusionsTab:Toggle("Afterimage Trail", function(v) 
@@ -1063,7 +1035,6 @@ IllusionsTab:Toggle("🧪 TEST Kill Effects", function(v)
         v = false
     end
 end)
-
 -- [TAB: SENSORY]
 local SensoryTab = Window:Tab("🎧 Sensory")
 SensoryTab:Toggle("Directional Echo", function(v) 
@@ -1086,7 +1057,6 @@ SensoryTab:Toggle("Ambient Boost", function(v)
     Settings.Sensory.AmbientBoost = v 
     print("[Sensory] Ambient Boost:", v)
 end)
-
 -- [TAB: WAIFU INTERFACE]
 local WaifuTab = Window:Tab("💗 Waifu")
 WaifuTab:Toggle("Voice Lines HUD", function(v) 
@@ -1105,7 +1075,6 @@ WaifuTab:Toggle("Idle Animation", function(v)
     Settings.Waifu.IdleAnimation = v 
     print("[Waifu] Idle Animation:", v)
 end)
-
 -- [TAB: STYLE]
 local StyleTab = Window:Tab("🎨 Style")
 StyleTab:Toggle("Particle Effects", function(v) 
@@ -1128,7 +1097,6 @@ StyleTab:Keybind("Menu Toggle", Enum.KeyCode.Insert, "Insert", function(key, nam
     Settings.Theme.MenuKey = key
     print("[Style] Menu Key set to:", name)
 end)
-
 -- [ANTI-BUG HELPER FUNCTION]
 -- Ensures all visual elements are non-physical
 function MakeVisualOnly(part)
@@ -1160,10 +1128,8 @@ end
             if v.Name then v.Name:Remove() end
         end
     end
-
     return Window
 end
-
 -- Helper to Parse Asset IDs (Updated for Decals/Stickers)
 local function ParseID(Input)
     if not Input then return "" end
@@ -1178,14 +1144,11 @@ local function ParseID(Input)
         return "rbxthumb://type=Asset&id=" .. Input .. "&w=420&h=420"
     end
 end
-
 -- // Feature Logic
-
 -- [ADVANCED TARGET SELECTOR]
 local LastStickyTarget = nil
 local StickyLockTime = 0
 local PreviousPositions = {} -- For velocity calculation
-
 local function GetBonePart(Character, BoneSelection)
     -- Returns the correct body part based on selection
     if BoneSelection == "Head" then
@@ -1211,7 +1174,6 @@ local function GetBonePart(Character, BoneSelection)
         return Character:FindFirstChild("Head")
     end
 end
-
 local function GetClosestPlayer()
     local ClosestDist = Settings.Combat.FOV
     if Settings.Combat.Aimbot.Mode360 then
@@ -1310,11 +1272,9 @@ local function GetClosestPlayer()
     
     return Target, TargetPlayer
 end
-
 -- Aimbot Loop (High Priority)
 local AimbotActive = false
 local CurrentTargetPlr = nil
-
 -- Visual Debugging (FOV Circle + Line)
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Thickness = 1
@@ -1324,12 +1284,10 @@ FOVCircle.Filled = false
 FOVCircle.Visible = false
 FOVCircle.Color = Color3.fromRGB(255, 255, 255)
 FOVCircle.Transparency = 1
-
 local SnapLine = Drawing.new("Line")
 SnapLine.Thickness = 1
 SnapLine.Color = Color3.fromRGB(255, 0, 0)
 SnapLine.Visible = false
-
 -- Toggle Input Handler
 table.insert(getgenv().SakuraConnections, UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe then return end
@@ -1344,7 +1302,6 @@ table.insert(getgenv().SakuraConnections, UserInputService.InputBegan:Connect(fu
         end
     end
 end))
-
 -- Aimbot Loop (High Priority + Fixes)
 -- Priority: Run after Camera (Classic is around 200). We use 2000 to be safe? 
 -- Actually Camera.Value is fine, but let's go late to override others.
@@ -1357,7 +1314,6 @@ RunService:BindToRenderStep("SakuraAimbot", Enum.RenderPriority.Last.Value, func
     else
         FOVCircle.Visible = false
     end
-
     local ShouldAim = false
     
     if Settings.Combat.Aimbot.InputMode == "Always On" then
@@ -1373,7 +1329,6 @@ RunService:BindToRenderStep("SakuraAimbot", Enum.RenderPriority.Last.Value, func
             if UserInputService:IsKeyDown(Key) then ShouldAim = true end
         end
     end
-
     if Settings.Combat.Aimbot.Enabled and ShouldAim then
         local Target, TargetPlayer = GetClosestPlayer() -- NEW: Get player for prediction
         if Target and Target.Parent then
@@ -1444,7 +1399,6 @@ table.insert(getgenv().SakuraConnections, {Disconnect = function()
     FOVCircle:Remove()
     SnapLine:Remove()
 end})
-
 -- [TRIGGER BOT - AUTO SHOOT]
 local LastTriggerShot = 0
 RunService:BindToRenderStep("SakuraTriggerBot", Enum.RenderPriority.Last.Value + 1, function()
@@ -1508,7 +1462,6 @@ end)
 table.insert(getgenv().SakuraConnections, {Disconnect = function() 
     RunService:UnbindFromRenderStep("SakuraTriggerBot") 
 end})
-
 -- Kill Switch [FIXED]
 local function MonitorDeath(Plr)
     if Plr == LocalPlayer then return end
@@ -1544,16 +1497,12 @@ local function MonitorDeath(Plr)
     if Plr.Character then CharAdded(Plr.Character) end
     Plr.CharacterAdded:Connect(CharAdded)
 end
-
-
-
 -- ESP
 local ESP_Holders = {}
 local function DrawESP(Plr)
     if Plr == LocalPlayer then return end
     
     if not Drawing then return end -- Guard against missing Drawing lib
-
     local Box = Drawing.new("Square")
     Box.Visible = false
     Box.Color = Settings.Visuals.ESP.Color
@@ -1567,15 +1516,12 @@ local function DrawESP(Plr)
     Name.Size = 14
     Name.Center = true
     Name.Outline = true
-
     local Tracer = Drawing.new("Line")
     Tracer.Visible = false
     Tracer.Color = Settings.Visuals.ESP.Color
     Tracer.Thickness = 1
     Tracer.Transparency = 1
-
     ESP_Holders[Plr] = {Box = Box, Name = Name, Tracer = Tracer}
-
     local Connection
     Connection = RunService.RenderStepped:Connect(function()
         if not Plr.Parent or not ESP_Holders[Plr] then
@@ -1585,7 +1531,6 @@ local function DrawESP(Plr)
             Connection:Disconnect()
             return
         end
-
         -- Checks
         if Settings.Visuals.ESP.Enabled and IsAlive(Plr) then
             local HRP = Plr.Character.HumanoidRootPart
@@ -1600,7 +1545,6 @@ local function DrawESP(Plr)
                     UseColor = Settings.Visuals.ESP.AllyColor
                 end
             end
-
             if OnScreen then
                 -- ... Box Math ...
                 local Size = Vector3.new(2, 3, 0) * (Camera.CFrame.Position - HRP.Position).Magnitude
@@ -1609,7 +1553,6 @@ local function DrawESP(Plr)
                 local SizeX = SizeY / 2
                 local TopLeft = Vector2.new(Pos.X - SizeX / 2, Pos.Y - SizeY / 2)
                 local BottomRight = Vector2.new(Pos.X + SizeX / 2, Pos.Y + SizeY / 2)
-
                 if Settings.Visuals.ESP.Boxes then
                     Box.Visible = true
                     Box.Size = Vector2.new(SizeX, SizeY)
@@ -1618,7 +1561,6 @@ local function DrawESP(Plr)
                 else
                     Box.Visible = false
                 end
-
                 if Settings.Visuals.ESP.Names then
                     Name.Visible = true
                     Name.Text = Plr.Name
@@ -1636,7 +1578,6 @@ local function DrawESP(Plr)
                 else
                     Tracer.Visible = false
                 end
-
                 -- [NEW] Sixth Sense (Radar Pulse)
                 if Settings.Visuals.SixthSense and IsEnemy(Plr) then
                      local Dist = (LocalPlayer.Character.HumanoidRootPart.Position - HRP.Position).Magnitude
@@ -1735,10 +1676,8 @@ local function DrawESP(Plr)
     end)
     table.insert(getgenv().SakuraConnections, Connection)
 end
-
 for _, v in pairs(Players:GetPlayers()) do DrawESP(v) end
 table.insert(getgenv().SakuraConnections, Players.PlayerAdded:Connect(DrawESP))
-
 -- Movement
 table.insert(getgenv().SakuraConnections, RunService.RenderStepped:Connect(function()
     if not LocalPlayer.Character then return end
@@ -1767,7 +1706,6 @@ table.insert(getgenv().SakuraConnections, RunService.RenderStepped:Connect(funct
     end
 end))
 -- Removed separate JumpRequest listener as forcing state in RenderStepped is stronger for Bhop
-
 -- SpinBot
 table.insert(getgenv().SakuraConnections, RunService.RenderStepped:Connect(function()
     if Settings.Rage.SpinBot and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -1786,19 +1724,16 @@ table.insert(getgenv().SakuraConnections, RunService.RenderStepped:Connect(funct
         -- But to fix "stuck" controls, maybe reset MinZoom?
         -- LocalPlayer.CameraMinZoomDistance = 0.5 
     end
-
     -- Mouse Lock (Force Camera Movement)
     if Settings.MouseLock then
         UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
     end
 end))
-
 -- // Anime FX Logic
 local Blur = Instance.new("BlurEffect")
 Blur.Parent = game:GetService("Lighting")
 Blur.Size = 0
 Blur.Enabled = false
-
 local function CreateAfterimage()
     local Char = LocalPlayer.Character
     if not Char then return end
@@ -1824,7 +1759,6 @@ local function CreateAfterimage()
     -- Remove Head/Face features for cleaner look?
     game.Debris:AddItem(Clone, 0.5)
 end
-
 local LastImage = 0
 table.insert(getgenv().SakuraConnections, RunService.RenderStepped:Connect(function()
     -- Motion Blur Anime
@@ -1857,7 +1791,6 @@ table.insert(getgenv().SakuraConnections, RunService.RenderStepped:Connect(funct
         end
     end
 end))
-
 -- [BLADE  CROSSHAIR]
 local BladeCrosshair = nil
 if not BladeCrosshair then
@@ -1866,12 +1799,10 @@ if not BladeCrosshair then
     BladeCrosshair.Thickness = 2
     BladeCrosshair.Filled = false
 end
-
 local BladeCrosshair2 = Drawing.new("Triangle")
 BladeCrosshair2.Visible = false
 BladeCrosshair2.Thickness = 2
 BladeCrosshair2.Filled = false
-
 local CrosshairRotation = 0
 table.insert(getgenv().SakuraConnections, RunService.RenderStepped:Connect(function()
     if Settings.WeaponSoul.BladeCrosshair then
@@ -1906,12 +1837,10 @@ table.insert(getgenv().SakuraConnections, RunService.RenderStepped:Connect(funct
         end
     end
 end))
-
 -- [INSTINCT LINE]
 local InstinctLine = Drawing.new("Line")
 InstinctLine.Thickness = 1
 InstinctLine.Transparency = 0.5
-
 table.insert(getgenv().SakuraConnections, RunService.RenderStepped:Connect(function()
     if Settings.FocusSystem.InstinctLine then
         local ViewportSize = Camera.ViewportSize
@@ -1966,7 +1895,6 @@ end))
             end
         end
     end
-
     -- Streamer Mode (Hide Nick/UI) & Invisible Mode
     if LocalPlayer.Character then
         -- Streamer Mode
@@ -1995,20 +1923,17 @@ end))
         -- For now, rely on MonitorDeath loop below.
     end
 end))
-
 -- Helper for Silent Aim Hook
 local function GetSilentTarget()
     if not Settings.Combat.SilentAim.Enabled then return nil end
     return GetClosestPlayer()
 end
-
 -- Hook Mouse.Hit / Mouse.Target for True Silent Aim
 -- This requires executor support (hookmetamethod). We wrap in pcall.
 pcall(function()
     local mt = getrawmetatable(game)
     local oldIndex = mt.__index
     setreadonly(mt, false)
-
     mt.__index = newcclosure(function(self, k)
         if (k == "Hit" or k == "Target") and self == Mouse then
             local Target = GetSilentTarget()
@@ -2025,8 +1950,6 @@ pcall(function()
     
     setreadonly(mt, true)
 end)
-
-
 -- Kill Sound Listener
 -- This is heuristic: if a death logic triggers nearby or if we can track kills.
 -- Simply playing a sound when requested for now, or on key press, or when `LocalPlayer` kills someone (requires game specific Leaderstats usually)
@@ -2034,7 +1957,6 @@ end)
 Players.PlayerRemoving:Connect(function(plr)
     -- This fires when someone leaves, not dies. 
 end)
-
 -- Kill Effects Logic (COMPREHENSIVE)
 local KillPanelFrame = nil
 local function TriggerKillEffects()
@@ -2195,7 +2117,6 @@ local function TriggerKillEffects()
         game.Debris:AddItem(RedPulse, 0.4)
     end
 end
-
 -- Kill Switch
 local function MonitorDeath(Plr)
     if Plr == LocalPlayer then return end
@@ -2227,7 +2148,6 @@ local function MonitorDeath(Plr)
     if Plr.Character then CharAdded(Plr.Character) end
     Plr.CharacterAdded:Connect(CharAdded)
 end
-
 -- Impact FX (Sakura/Explosion on Click)
 table.insert(getgenv().SakuraConnections, UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe then return end
@@ -2256,10 +2176,8 @@ table.insert(getgenv().SakuraConnections, UserInputService.InputBegan:Connect(fu
         end
     end
 end))
-
 for _, v in pairs(Players:GetPlayers()) do MonitorDeath(v) end
 table.insert(getgenv().SakuraConnections, Players.PlayerAdded:Connect(MonitorDeath))
-
 -- Custom Cursor Logic
 local CustomCursor = Instance.new("ImageLabel")
 CustomCursor.Name = "CustomCursor"
@@ -2271,7 +2189,6 @@ CustomCursor.Visible = false
 CustomCursor.AnchorPoint = Vector2.new(0.5, 0.5)
 CustomCursor.ZIndex = 100 -- Topmost
 CustomCursor.Active = false
-
 table.insert(getgenv().SakuraConnections, RunService.RenderStepped:Connect(function()
     if Settings.Cursor.Enabled then
         CustomCursor.Visible = true
@@ -2325,11 +2242,8 @@ table.insert(getgenv().SakuraConnections, RunService.RenderStepped:Connect(funct
         UserInputService.MouseIconEnabled = true
     end
 end))
-
-
 -- // Initialize UI
 local Win = Library:CreateWindow("AWAKEN.EXE")
-
 -- [Combat Tab]
 local CombatTab = Win:Tab("Combat")
 CombatTab:Toggle("Legit Aimbot", function(v) Settings.Combat.Aimbot.Enabled = v end)
@@ -2337,14 +2251,12 @@ CombatTab:Keybind("Aimbot Key", Settings.Combat.Aimbot.Key, Settings.Combat.Aimb
     Settings.Combat.Aimbot.Key = key
     Settings.Combat.Aimbot.KeyName = name
 end)
-
 -- New Modes
 Settings.Combat.Aimbot.InputMode = "Hold"
 Settings.Combat.Aimbot.Mode360 = false
 CombatTab:Toggle("Use Toggle Mode", function(v) 
     if v then Settings.Combat.Aimbot.InputMode = "Toggle" else Settings.Combat.Aimbot.InputMode = "Hold" end 
 end)
-
 -- [NEW] Target Part Selector (Simple Toggle for now)
 CombatTab:Toggle("Aim at HEAD (Off = Torso)", function(v)
     if v then
@@ -2356,23 +2268,17 @@ end)
 -- Force "Head" default visual state? 
 -- The UI toggle doesn't support setting default visual state in this simple lib easily without triggering callback.
 -- We'll assume user will click it. Or we set default in Settings to "Head" (it is) and user can toggle off.
-
 CombatTab:Toggle("360 Mode (Ignore FOV)", function(v) Settings.Combat.Aimbot.Mode360 = v end)
-
 CombatTab:Slider("Smoothness", 0, 1, 0.1, function(v) Settings.Combat.Aimbot.Smoothing = v end)
 CombatTab:Slider("FOV Radius", 50, 500, 150, function(v) Settings.Combat.FOV = v end)
-
 CombatTab:Toggle("Silent Aim (Visual)", function(v) Settings.Combat.SilentAim.Enabled = v end)
 CombatTab:Toggle("Trigger Bot", function(v) Settings.Combat.TriggerBot.Enabled = v end)
 CombatTab:Slider("Trigger Delay", 0, 1, 0.1, function(v) Settings.Combat.TriggerBot.Delay = v end)
-
 CombatTab:Toggle("Wall Check", function(v) Settings.Combat.WallCheck = v end)
 CombatTab:Toggle("Team Check", function(v) Settings.Combat.TeamCheck = v end)
-
 -- [Rage Tab]
 local RageTab = Win:Tab("Rage")
 RageTab:Toggle("Spin Bot", function(v) Settings.Rage.SpinBot = v end)
-
 -- [Visuals Tab]
 local VisualsTab = Win:Tab("Visuals")
 VisualsTab:Toggle("Enable ESP", function(v) Settings.Visuals.ESP.Enabled = v end)
@@ -2380,7 +2286,6 @@ VisualsTab:Toggle("Draw Boxes", function(v) Settings.Visuals.ESP.Boxes = v end)
 VisualsTab:Toggle("Draw Names", function(v) Settings.Visuals.ESP.Names = v end)
 VisualsTab:Toggle("Draw Tracers", function(v) Settings.Visuals.ESP.Tracers = v end)
 VisualsTab:Toggle("Use Team Colors", function(v) Settings.Visuals.ESP.TeamColor = v end)
-
 -- [NEW] Streamer / Identity
 VisualsTab:Toggle("Streamer Mode (Hide Nick)", function(v) 
     Settings.Visuals.StreamerMode = v 
@@ -2389,11 +2294,9 @@ VisualsTab:Toggle("Streamer Mode (Hide Nick)", function(v)
     end
 end)
 VisualsTab:Toggle("Invisible (Hide Body/Arms)", function(v) Settings.Visuals.Invisible = v end)
-
 VisualsTab:Toggle("Force 3rd Person", function(v) Settings.Visuals.ForceThirdPerson = v end)
 VisualsTab:Toggle("Player Chams (Glow)", function(v) Settings.Visuals.Chams = v end)
 VisualsTab:Toggle("Weapon Chams", function(v) Settings.Visuals.WeaponChams = v end)
-
 -- [Anime FX Tab] (New!)
 local AnimeTab = Win:Tab("Anime FX")
 AnimeTab:Toggle("Afterimage", function(v) Settings.Visuals.Afterimage = v end)
@@ -2404,13 +2307,11 @@ AnimeTab:Toggle("Sixth Sense (Radar)", function(v) Settings.Visuals.SixthSense =
 AnimeTab:Toggle("Danger Lines", function(v) Settings.Visuals.DangerLines = v end)
 AnimeTab:Toggle("Recoil Spirit", function(v) Settings.Visuals.RecoilSpirit = v end)
 AnimeTab:Toggle("Impact FX (Sakura)", function(v) Settings.Visuals.ImpactFX = v end)
-
 -- [Movement Tab]
 local MovementTab = Win:Tab("Movement")
 MovementTab:Toggle("Auto Bhop", function(v) Settings.Movement.Bhop = v end)
 MovementTab:Slider("Walk Speed", 16, 200, 16, function(v) Settings.Movement.Speed = v end)
 MovementTab:Slider("Jump Power", 50, 200, 50, function(v) Settings.Movement.Jump = v end)
-
 -- [Misc Tab]
 local MiscTab = Win:Tab("Misc")
 MiscTab:Toggle("Force Mouse Lock", function(v) 
@@ -2438,9 +2339,6 @@ MiscTab:Toggle("Rainbow Skin", function(v)
         end)
     end
 end)
-
-
-
 -- [Cursor Tab]
 local CursorTab = Win:Tab("Cursor")
 CursorTab:Toggle("Custom Cursor", function(v) Settings.Cursor.Enabled = v end)
@@ -2451,21 +2349,18 @@ CursorTab:TextBox("Image ID", "6065765799", function(v)
     Settings.Cursor.ID = CleanID
     CustomCursor.Image = CleanID
 end)
-
 -- Save/Load Config
 local function SaveConfig()
     if not writefile then return end
     local json = HttpService:JSONEncode(Settings)
     writefile("SakuraConfig.json", json)
 end
-
 local function LoadConfig()
     if not isfile or not isfile("SakuraConfig.json") then return end
     local Success, Loaded = pcall(function()
         return HttpService:JSONDecode(readfile("SakuraConfig.json"))
     end)
     if not Success or not Loaded then return end
-
     -- Migration Logic (Old -> New)
     if Loaded.Aimbot and not Loaded.Combat then
         -- Migrating Old Config
@@ -2510,14 +2405,12 @@ local function LoadConfig()
         -- Handled by Loop 
     end
 end
-
 -- [Settings Tab]
 local SettingsTab = Win:Tab("Settings")
 SettingsTab:Keybind("Menu Toggle Key", Settings.Theme.MenuKey, Settings.Theme.MenuKeyName, function(key, name)
     Settings.Theme.MenuKey = key
     Settings.Theme.MenuKeyName = name
 end)
-
 SettingsTab:TextBox("Background Image ID", "", function(v)
     if v == "" then
         Win:SetBackground(nil)
@@ -2528,13 +2421,11 @@ SettingsTab:TextBox("Background Image ID", "", function(v)
         Settings.Theme.Background = CleanID
     end
 end)
-
 SettingsTab:Toggle("Unload Script", function(v)
     if v then
         Win:Destroy()
     end
 end)
-
 SettingsTab:Toggle("Save Config (Click)", function(v)
     if v then
         SaveConfig()
@@ -2545,11 +2436,9 @@ SettingsTab:Toggle("Load Config (Click)", function(v)
         LoadConfig()
     end
 end)
-
 -- ========================================
 -- RAGE FEATURES
 -- ========================================
-
 -- Rapid Fire
 local LastRapidClick = 0
 local RapidFireConn = RunService.Heartbeat:Connect(function()
@@ -2565,7 +2454,6 @@ local RapidFireConn = RunService.Heartbeat:Connect(function()
     end
 end)
 table.insert(getgenv().SakuraConnections, {Disconnect = function() RapidFireConn:Disconnect() end})
-
 -- Fly Mode
 local Flying = false
 local FlyConn = nil
@@ -2611,7 +2499,6 @@ local function StartFlying()
         BV.Velocity = Velocity
     end)
 end
-
 task.spawn(function()
     while task.wait(0.5) do
         if Settings.Rage.FlyMode and not Flying and LocalPlayer.Character then
@@ -2619,7 +2506,6 @@ task.spawn(function()
         end
     end
 end)
-
 -- Noclip
 local NoclipConn = RunService.Stepped:Connect(function()
     if not Settings.Rage.Noclip then return end
@@ -2632,11 +2518,9 @@ local NoclipConn = RunService.Stepped:Connect(function()
     end
 end)
 table.insert(getgenv().SakuraConnections, {Disconnect = function() NoclipConn:Disconnect() end})
-
 -- ========================================
 -- UTILITIES
 -- ========================================
-
 -- Fullbright & Remove Fog
 local OriginalBrightness = game.Lighting.Brightness
 local OriginalFogEnd = game.Lighting.FogEnd
@@ -2656,7 +2540,6 @@ table.insert(getgenv().SakuraConnections, {Disconnect = function()
     game.Lighting.Brightness = OriginalBrightness
     game.Lighting.FogEnd = OriginalFogEnd
 end})
-
 -- FOV Changer
 local OriginalFOV = Camera.FieldOfView
 local FOVConn = RunService.RenderStepped:Connect(function()
@@ -2668,7 +2551,6 @@ table.insert(getgenv().SakuraConnections, {Disconnect = function()
     FOVConn:Disconnect()
     Camera.FieldOfView = OriginalFOV
 end})
-
 -- Watermark & FPS Counter
 local WatermarkLabel = Instance.new("TextLabel")
 WatermarkLabel.Parent = UI
@@ -2682,7 +2564,6 @@ WatermarkLabel.TextStrokeTransparency = 0
 WatermarkLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
 WatermarkLabel.TextXAlignment = Enum.TextXAlignment.Left
 WatermarkLabel.ZIndex = 999
-
 local LastFrameTime = tick()
 local CurrentFPS = 60
 task.spawn(function()
@@ -2707,7 +2588,6 @@ task.spawn(function()
         end
     end
 end)
-
 -- Coordinate Display
 local CoordLabel = Instance.new("TextLabel")
 CoordLabel.Parent = UI
@@ -2721,7 +2601,6 @@ CoordLabel.TextStrokeTransparency = 0
 CoordLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
 CoordLabel.TextXAlignment = Enum.TextXAlignment.Right
 CoordLabel.ZIndex = 999
-
 task.spawn(function()
     while task.wait(0.1) do
         if Settings.Misc.CoordinateDisplay and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -2733,13 +2612,10 @@ task.spawn(function()
         end
     end
 end)
-
 -- ========================================
 -- STATS SYSTEM
 -- ========================================
-
 Settings.Stats.SessionStart = tick()
-
 -- Death detection
 LocalPlayer.CharacterAdded:Connect(function()
     task.wait(1)
@@ -2748,11 +2624,9 @@ LocalPlayer.CharacterAdded:Connect(function()
         Settings.Stats.KillStreak = 0
     end
 end)
-
 -- ========================================
 -- PANIC MODE
 -- ========================================
-
 UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe then return end
     if input.KeyCode == Settings.Misc.PanicKey then
@@ -2776,11 +2650,9 @@ UserInputService.InputBegan:Connect(function(input, gpe)
         })
     end
 end)
-
 -- ========================================
 -- SCREENSHOT CLEANER (ANTI-DETECTION)
 -- ========================================
-
 local ScreenshotCleaning = false
 UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe then return end
@@ -2829,11 +2701,9 @@ UserInputService.InputBegan:Connect(function(input, gpe)
         end)
     end
 end)
-
 -- ========================================
 -- SAFE VALUE LIMITS (ANTI-DETECTION)
 -- ========================================
-
 -- Monitor and cap suspicious values
 task.spawn(function()
     while task.wait(1) do
@@ -2860,7 +2730,6 @@ task.spawn(function()
         end
     end
 end)
-
 print("✅ AWAKEN.EXE v2.1 Loaded Successfully!")
 print("🛡️ Anti-Detection: Humanization, Screenshot Cleaner, Safe Limits")
 print("🚨 Panic Key: DELETE")
